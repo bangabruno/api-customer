@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDTO implements Product, Serializable {
+public class ProductResponseModel implements Product, Serializable {
     
     private String id;
     private String title;

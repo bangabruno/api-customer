@@ -10,17 +10,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class CustomerRequestEntity {
-    
-    Long id;
-
-    String name;
-
-    String email;
-
-    boolean active;
+@NoArgsConstructor
+public class CustomerProductsPutModel {
 
     @Builder.Default
     Set<String> productsToAdd = new HashSet<>();

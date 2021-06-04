@@ -1,0 +1,9 @@
+spring:
+    jpa:
+        properties:
+            hibernate:
+                showSql: true
+                formatSql: true
+
+product:
+    url-find-by-id: http://challenge-api.luizalabs.com/api/product/{id}/

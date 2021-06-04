@@ -2,50 +2,52 @@ package com.luizalabs.api.customer.application;
 
 import java.util.Optional;
 
-import com.luizalabs.api.customer.adapter.jpa.CustomerDataGateway;
+import com.luizalabs.api.customer.adapter.presenter.CustomerPresenter;
 import com.luizalabs.api.customer.domain.model.customer.CustomerPostModel;
-import com.luizalabs.api.customer.domain.model.customer.CustomerPresenter;
+import com.luizalabs.api.customer.domain.model.customer.CustomerProductsPutModel;
 import com.luizalabs.api.customer.domain.model.customer.CustomerPutModel;
 import com.luizalabs.api.customer.domain.model.customer.CustomerRequestEntity;
-import com.luizalabs.api.customer.domain.model.customer.CustomerResponseDTO;
+import com.luizalabs.api.customer.domain.model.customer.CustomerResponseModel;
 import com.luizalabs.api.customer.domain.shared.exception.CustomerEmaiAlreadyRegisteredException;
 import com.luizalabs.api.customer.domain.shared.exception.GenericNoContentException;
 import com.luizalabs.api.customer.domain.shared.exception.GenericNotFoundException;
+import com.luizalabs.api.customer.infrastructure.jpa.CustomerDataGateway;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CustomerInteractor implements CustomerBoundary {
 
-    private final CustomerDataGateway dataGateway;
+    private final CustomerDataGateway customerData;
     private final CustomerPresenter presenter;
 
     @Autowired
-    public CustomerInteractor(CustomerDataGateway dataGateway, CustomerPresenter presenter) {
-        this.dataGateway = dataGateway;
+    public CustomerInteractor(CustomerDataGateway customerData, CustomerPresenter presenter) {
+        this.customerData = customerData;
         this.presenter = presenter;
     }
 
     @Override
-    public CustomerResponseDTO find(long id) {
-        Optional<CustomerResponseDTO> customer = dataGateway.findById(id);
+    public CustomerResponseModel find(long id) {
+        Optional<CustomerResponseModel> customer = customerData.findById(id);
         return presenter.success(
             customer.orElseThrow(GenericNotFoundException::new)
         );
     }
 
     @Override
-    public CustomerResponseDTO find(String email) {
-        Optional<CustomerResponseDTO> customer = dataGateway.findByEmail(email);
+    public CustomerResponseModel find(String email) {
+        Optional<CustomerResponseModel> customer = customerData.findByEmail(email);
         return presenter.success(
             customer.orElseThrow(GenericNotFoundException::new)
         );
     }
 
     @Override
-    public CustomerResponseDTO create(CustomerPostModel request) {
-        this.validateEmail(null, request.getEmail());
+    public CustomerResponseModel create(CustomerPostModel request) {
+        CustomerResponseModel response;
 
         CustomerRequestEntity dataRequest = CustomerRequestEntity.builder()
             .name(request.getName())
@@ -53,51 +55,48 @@ public class CustomerInteractor implements CustomerBoundary {
             .active(true)
             .build();
 
-        CustomerResponseDTO response = dataGateway.save(dataRequest);
-        
+        try {
+            response = customerData.save(dataRequest);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomerEmaiAlreadyRegisteredException(request.getEmail());
+        }
+
         return presenter.success(response);
     }
 
     @Override
-    public CustomerResponseDTO update(long id, CustomerPutModel request) {
-        Optional<CustomerResponseDTO> actual = dataGateway.findById(id);
-
-        if (actual.isEmpty())
-            throw new GenericNoContentException();
-        else
-            this.validateEmail(actual.get().getEmail(), request.getEmail());
+    public CustomerResponseModel update(long id, CustomerPutModel request) {
+        Optional<CustomerResponseModel> response;
 
         CustomerRequestEntity dataRequest = CustomerRequestEntity.builder()
             .id(id)
             .name(request.getName())
             .email(request.getEmail())
-            .favoritesProducts(request.getFavoritesProducts())
             .build();
 
-        CustomerResponseDTO customer = dataGateway.save(dataRequest);
-        return presenter.success(customer);
+        try {
+            response = customerData.updateCustomer(dataRequest);
+            if (response.isEmpty())
+                throw new GenericNoContentException();
+
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomerEmaiAlreadyRegisteredException(request.getEmail());
+        }
+        
+        return presenter.success(response.orElse(null));
     }
 
     @Override
     public void delete(long id) {
-        Optional<CustomerResponseDTO> actual = dataGateway.findById(id);
-
-        if (actual.isEmpty())
+        if (!customerData.deleteLogically(id))
             throw new GenericNoContentException();
-
-        CustomerRequestEntity dataRequest = CustomerRequestEntity.builder()
-            .id(id)
-            .active(false)
-            .build();
-
-        dataGateway.save(dataRequest);
     }
 
-    private void validateEmail(String actualEmail, String newEmail) {
-        if (!newEmail.equalsIgnoreCase(actualEmail) && dataGateway.emailAlreadyExists(newEmail)) {
-            throw new CustomerEmaiAlreadyRegisteredException(newEmail);
-        }
-
+    @Override
+    public CustomerResponseModel updateFavoriteProducts(long id, CustomerProductsPutModel request) {
+        customerData.addProductsToFavorites(id, request.getProductsToAdd());
+        customerData.removeProductsFromFavorites(id, request.getProductsToRemove());
+        return customerData.findById(id).orElse(null);
     }
     
 }

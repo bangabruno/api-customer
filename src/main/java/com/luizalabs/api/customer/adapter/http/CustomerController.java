@@ -4,8 +4,9 @@ import javax.validation.Valid;
 
 import com.luizalabs.api.customer.application.CustomerBoundary;
 import com.luizalabs.api.customer.domain.model.customer.CustomerPostModel;
+import com.luizalabs.api.customer.domain.model.customer.CustomerProductsPutModel;
 import com.luizalabs.api.customer.domain.model.customer.CustomerPutModel;
-import com.luizalabs.api.customer.domain.model.customer.CustomerResponseDTO;
+import com.luizalabs.api.customer.domain.model.customer.CustomerResponseModel;
 import com.luizalabs.api.customer.domain.shared.GenericResponse;
 import com.luizalabs.api.customer.domain.shared.Messages;
 
@@ -34,33 +35,45 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<GenericResponse<CustomerResponseDTO>> create(@Valid @RequestBody CustomerPostModel request) {
-        GenericResponse<CustomerResponseDTO> response = GenericResponse.success(inbound.create(request), Messages.CUSTOMER_SUCCESS);
+    @Secured("ROLE_CUSTOMER")
+    public ResponseEntity<GenericResponse<CustomerResponseModel>> create(@Valid @RequestBody CustomerPostModel request) {
+        GenericResponse<CustomerResponseModel> response = GenericResponse.success(inbound.create(request), Messages.CUSTOMER_SUCCESS);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
     @Secured("ROLE_CUSTOMER")
-    public ResponseEntity<GenericResponse<CustomerResponseDTO>> update(@PathVariable long id, @Valid @RequestBody CustomerPutModel request) {
-        GenericResponse<CustomerResponseDTO> response = GenericResponse.success(inbound.update(id, request));
+    public ResponseEntity<GenericResponse<CustomerResponseModel>> update(@PathVariable long id, @Valid @RequestBody CustomerPutModel request) {
+        GenericResponse<CustomerResponseModel> response = GenericResponse.success(inbound.update(id, request));
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/products/favorites")
+    @Secured("ROLE_CUSTOMER")
+    public ResponseEntity<GenericResponse<CustomerResponseModel>> updateFavoriteProducts(
+        @PathVariable long id, @Valid @RequestBody CustomerProductsPutModel request) {
+        GenericResponse<CustomerResponseModel> response = GenericResponse.success(inbound.updateFavoriteProducts(id, request));
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<GenericResponse<CustomerResponseDTO>> delete(@PathVariable long id) {
+    @Secured("ROLE_CUSTOMER")
+    public ResponseEntity<GenericResponse<CustomerResponseModel>> delete(@PathVariable long id) {
         inbound.delete(id);
         return ResponseEntity.status(HttpStatus.OK).body(GenericResponse.success(null, Messages.CUSTOMER_SUCCESS));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GenericResponse<CustomerResponseDTO>> get(@PathVariable long id) {
-        GenericResponse<CustomerResponseDTO> response = GenericResponse.success(inbound.find(id));
+    @Secured("ROLE_CUSTOMER")
+    public ResponseEntity<GenericResponse<CustomerResponseModel>> get(@PathVariable long id) {
+        GenericResponse<CustomerResponseModel> response = GenericResponse.success(inbound.find(id));
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<GenericResponse<CustomerResponseDTO>> get(@PathVariable String email) {
-        GenericResponse<CustomerResponseDTO> response = GenericResponse.success(inbound.find(email));
+    @Secured("ROLE_CUSTOMER")
+    public ResponseEntity<GenericResponse<CustomerResponseModel>> get(@PathVariable String email) {
+        GenericResponse<CustomerResponseModel> response = GenericResponse.success(inbound.find(email));
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

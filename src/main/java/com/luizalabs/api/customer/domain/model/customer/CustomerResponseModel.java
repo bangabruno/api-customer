@@ -3,7 +3,7 @@ package com.luizalabs.api.customer.domain.model.customer;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import com.luizalabs.api.customer.domain.model.product.ProductDTO;
+import com.luizalabs.api.customer.domain.model.product.ProductResponseModel;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CustomerResponseDTO implements Customer {
+public class CustomerResponseModel implements Customer {
 
     Long id;
     String name;
     String email;
     LocalDateTime createdAt;
     boolean active;
-    Set<ProductDTO> favoritesProducts;
+    Set<ProductResponseModel> favoritesProducts;
 }

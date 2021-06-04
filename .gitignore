@@ -42,3 +42,5 @@ target/classes/application.properties
 target/test-classes/application.properties
 .gitignore
 target/classes/data.sql
+target/classes/application.yaml
+target/test-classes/application.yaml

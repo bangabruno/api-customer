@@ -26,7 +26,5 @@ CREATE TABLE customers (
     email VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT now() NOT NULL,
     active BOOLEAN DEFAULT true NOT NULL,
-    favorites_products JSONB
+    favorite_products TEXT[]
 );
-
-CREATE INDEX idx_favorites_products_id ON customers ((favorites_products->>'id'));

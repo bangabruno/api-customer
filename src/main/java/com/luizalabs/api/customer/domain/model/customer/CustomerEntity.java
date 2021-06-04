@@ -2,7 +2,8 @@ package com.luizalabs.api.customer.domain.model.customer;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,8 +15,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
-import com.luizalabs.api.customer.domain.model.product.ProductDTO;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import com.vladmihalcea.hibernate.type.array.ListArrayType;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "customers")
-@TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
+@TypeDef(name = "list-array", typeClass = ListArrayType.class)
 public class CustomerEntity implements Serializable {
     
     @Id
@@ -47,15 +47,16 @@ public class CustomerEntity implements Serializable {
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "active")
     private boolean active;
 
-    @Type(type = "jsonb")
-    @Column(name = "favorites_products")
-    private Set<ProductDTO> favoritesProducts;
+    @Type(type = "list-array")
+    @Column(name = "favorite_products", columnDefinition = "text[]")
+    @Builder.Default
+    private List<String> favoriteProducts = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
