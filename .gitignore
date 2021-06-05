@@ -44,3 +44,8 @@ target/test-classes/application.properties
 target/classes/data.sql
 target/classes/application.yaml
 target/test-classes/application.yaml
+target/surefire-reports/com.luizalabs.api.customer.CustomerControllerTest.txt
+target/surefire-reports/TEST-com.luizalabs.api.customer.CustomerControllerTest.xml
+target/maven-archiver/pom.properties
+target/customer-0.0.1-SNAPSHOT.jar.original
+target/classes/schema.sql

@@ -6,20 +6,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collections;
 import java.util.HashSet;
 
 import com.luizalabs.api.customer.adapter.presenter.CustomerPresenter;
 import com.luizalabs.api.customer.adapter.presenter.CustomerResponser;
 import com.luizalabs.api.customer.application.CustomerBoundary;
 import com.luizalabs.api.customer.application.CustomerInteractor;
-import com.luizalabs.api.customer.config.DataSourceConfig;
-import com.luizalabs.api.customer.config.ProductProperties;
+import com.luizalabs.api.customer.config.datasource.DataSourceConfig;
+import com.luizalabs.api.customer.config.properties.ProductProperties;
 import com.luizalabs.api.customer.domain.model.customer.CustomerPostModel;
 import com.luizalabs.api.customer.domain.model.customer.CustomerProductsPutModel;
 import com.luizalabs.api.customer.domain.model.customer.CustomerPutModel;
 import com.luizalabs.api.customer.domain.model.customer.CustomerResponseModel;
-import com.luizalabs.api.customer.domain.shared.exception.CustomerEmaiAlreadyRegisteredException;
+import com.luizalabs.api.customer.domain.shared.exception.GenericNoContentException;
 import com.luizalabs.api.customer.domain.shared.exception.GenericNotFoundException;
+import com.luizalabs.api.customer.domain.shared.exception.GenericUnprocessableEntityException;
 import com.luizalabs.api.customer.infrastructure.api.ProductAPI;
 import com.luizalabs.api.customer.infrastructure.api.ProductDataGateway;
 import com.luizalabs.api.customer.infrastructure.jpa.CustomerDataGateway;
@@ -37,9 +39,8 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.client.RestTemplate;
 
-@SpringBootTest(classes = {DataSourceConfig.class})
+@SpringBootTest(classes = {DataSourceConfig.class, ProductProperties.class})
 @EnableAutoConfiguration
 @TestInstance(Lifecycle.PER_CLASS)
 public class CustomerInteractorTest {
@@ -62,10 +63,10 @@ public class CustomerInteractorTest {
 
     @BeforeAll
     public void setUp() {
-        productData = new ProductAPI(new RestTemplate(), properties);
+        productData = new ProductAPI(properties);
         customerData = new CustomerJPA(repository, productData);
         presenter = new CustomerResponser();
-        inbound = new CustomerInteractor(customerData, presenter);
+        inbound = new CustomerInteractor(customerData, presenter, productData);
     }
 
     @BeforeEach
@@ -99,6 +100,8 @@ public class CustomerInteractorTest {
     @Order(2)
     @DisplayName("Should find customer with success by ID")
     public void testShouldFindCustomerWithSuccessByID() {
+        post.setName("Segundo Nome");
+        post.setEmail("segundoemail@gmail.com");
         CustomerResponseModel response = inbound.create(post);
         response = inbound.find(response.getId());
         assertNotNull(response.getId());;
@@ -108,6 +111,8 @@ public class CustomerInteractorTest {
     @Order(3)
     @DisplayName("Should find customer with success by email")
     public void testShouldFindCustomerWithSuccessByEmail() {
+        post.setName("Terceiro Nome");
+        post.setEmail("terceiroemail@gmail.com");
         CustomerResponseModel response = inbound.create(post);
         response = inbound.find(response.getEmail());
         assertNotNull(response.getId());;
@@ -117,8 +122,10 @@ public class CustomerInteractorTest {
     @Order(4)
     @DisplayName("Should throw Exception for email already registered")
     public void testShouldThrowEmailAlreadyRegisteredOnCreate() {
+        post.setName("Quarto Nome");
+        post.setEmail("quartoemail@gmail.com");
         inbound.create(post);
-        assertThrows(CustomerEmaiAlreadyRegisteredException.class, () -> inbound.create(post));
+        assertThrows(GenericUnprocessableEntityException.class, () -> inbound.create(post));
     }
 
     @Test
@@ -139,34 +146,41 @@ public class CustomerInteractorTest {
     @Order(7)
     @DisplayName("Should update Customer's email with success")
     public void testShouldUpdateCustomersEmailWithSuccess() {
+        post.setName("Setimo Nome");
+        post.setEmail("setimoemail@gmail.com");
         CustomerResponseModel customer1 = inbound.create(post);
         assertNotNull(customer1.getId());
 
+        put.setEmail("setimoemail2@gmail.com");
         CustomerResponseModel customer2 = inbound.update(customer1.getId(), put);
         assertEquals(customer2.getEmail(), put.getEmail());
     }
 
     @Test
     @Order(8)
-    @DisplayName("Should throw Exception for email already registered")
+    @DisplayName("Should throw Exception for email already registered on update")
     public void testShouldThrowEmailAlreadyRegisteredOnUpdate() {
+        post.setName("Oitavo Nome");
+        post.setEmail("oitavoemail@gmail.com");
         CustomerResponseModel customer1 = inbound.create(post);
         assertNotNull(customer1.getId());
 
-        post.setName("Outro Nome da Silva");
-        post.setEmail("terceiroemail@gmail.com");
+        post.setName("Oitavo2 Nome");
+        post.setEmail("Oitavo2email@gmail.com");
         CustomerResponseModel customer2 = inbound.create(post);
         assertNotNull(customer2.getId());
 
         put.setEmail(customer2.getEmail());
         long id = customer1.getId();
-        assertThrows(CustomerEmaiAlreadyRegisteredException.class, () -> inbound.update(id, put));
+        assertThrows(GenericUnprocessableEntityException.class, () -> inbound.update(id, put));
     }
 
     @Test
     @Order(9)
     @DisplayName("Should delete (logically) Customer with success")
     public void testShouldDeleteLogicallyCustomerWithSuccess() {
+        post.setName("Nono Nome");
+        post.setEmail("nonoemail@gmail.com");
         CustomerResponseModel customer1 = inbound.create(post);
         assertNotNull(customer1.getId());
 
@@ -179,6 +193,8 @@ public class CustomerInteractorTest {
     @Order(10)
     @DisplayName("Should add products to Customer's favorite list with success")
     public void testShouldAddProductsToCustomersFavoriteListWithSuccess() {
+        post.setName("Decimo Nome");
+        post.setEmail("decimoemail@gmail.com");
         CustomerResponseModel customer1 = inbound.create(post);
         assertNotNull(customer1.getId());
 
@@ -191,6 +207,8 @@ public class CustomerInteractorTest {
     @Order(11)
     @DisplayName("Should remove products to Customer's favorite list with success")
     public void testShouldRemoveProductsToCustomersFavoriteListWithSuccess() {
+        post.setName("Decimo Primeiro Nome");
+        post.setEmail("decimoprimeiroemail@gmail.com");
         CustomerResponseModel customer1 = inbound.create(post);
         assertNotNull(customer1.getId());
 
@@ -203,6 +221,56 @@ public class CustomerInteractorTest {
 
         customer1 = inbound.find(customer1.getId());
         assertTrue(customer1.getFavoritesProducts().isEmpty());
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("Should remove only one product From Customer's favorite list with success")
+    public void testShouldRemoveOnlyOneProductFromCustomersFavoriteListWithSuccess() {
+        post.setName("Decimo Segundo Nome");
+        post.setEmail("decimopsegundoemail@gmail.com");
+        CustomerResponseModel customer1 = inbound.create(post);
+        assertNotNull(customer1.getId());
+
+        inbound.updateFavoriteProducts(customer1.getId(), putProducts);
+
+        putProducts.setProductsToRemove(Collections.singleton(putProducts.getProductsToAdd().iterator().next()));
+
+        inbound.updateFavoriteProducts(customer1.getId(), putProducts);
+
+        customer1 = inbound.find(customer1.getId());
+        assertFalse(customer1.getFavoritesProducts().isEmpty());
+        assertEquals(1, customer1.getFavoritesProducts().size());
+    }
+
+    @Test
+    @Order(13)
+    @DisplayName("Should throw exception for trying to add a product to favorite list that does not exist in repository")
+    public void testShouldThrowExceptionForTryingToAddAProductToFavoriteListThatDoesNotExistInRepository() {
+        post.setName("Decimo Terceiro Nome");
+        post.setEmail("decimoterceiroemail@gmail.com");
+        CustomerResponseModel customer1 = inbound.create(post);
+        assertNotNull(customer1.getId());
+
+        putProducts.getProductsToAdd().add("IdInexistente");
+        long id = customer1.getId();
+        assertThrows(GenericUnprocessableEntityException.class, () -> inbound.updateFavoriteProducts(id, putProducts));
+    }
+
+    @Test
+    @Order(14)
+    @DisplayName("Should throw exception for trying to add a product to favorite list of an inexistent customer")
+    public void testShouldThrowExceptionForTryingToAddAProductToFavoriteListTOfAnInexistentCustomer() {
+        long id = 999L;
+        assertThrows(GenericNotFoundException.class, () -> inbound.updateFavoriteProducts(id, putProducts));
+    }
+
+    @Test
+    @Order(15)
+    @DisplayName("Should throw exception for trying to update an inexistent customer")
+    public void testShouldThrowExceptionForTryingToUpdateAnInexistentCustomer() {
+        long id = 999L;
+        assertThrows(GenericNoContentException.class, () -> inbound.update(id, put));
     }
 
 }

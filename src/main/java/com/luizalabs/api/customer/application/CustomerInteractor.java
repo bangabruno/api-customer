@@ -11,6 +11,8 @@ import com.luizalabs.api.customer.domain.model.customer.CustomerResponseModel;
 import com.luizalabs.api.customer.domain.shared.exception.CustomerEmaiAlreadyRegisteredException;
 import com.luizalabs.api.customer.domain.shared.exception.GenericNoContentException;
 import com.luizalabs.api.customer.domain.shared.exception.GenericNotFoundException;
+import com.luizalabs.api.customer.domain.shared.exception.ProductDoesNotExistInRepository;
+import com.luizalabs.api.customer.infrastructure.api.ProductDataGateway;
 import com.luizalabs.api.customer.infrastructure.jpa.CustomerDataGateway;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +23,14 @@ import org.springframework.stereotype.Service;
 public class CustomerInteractor implements CustomerBoundary {
 
     private final CustomerDataGateway customerData;
+    private final ProductDataGateway productData;
     private final CustomerPresenter presenter;
 
     @Autowired
-    public CustomerInteractor(CustomerDataGateway customerData, CustomerPresenter presenter) {
+    public CustomerInteractor(CustomerDataGateway customerData, CustomerPresenter presenter, ProductDataGateway productData) {
         this.customerData = customerData;
         this.presenter = presenter;
+        this.productData = productData;
     }
 
     @Override
@@ -94,9 +98,15 @@ public class CustomerInteractor implements CustomerBoundary {
 
     @Override
     public CustomerResponseModel updateFavoriteProducts(long id, CustomerProductsPutModel request) {
+        request.getProductsToAdd().forEach(
+            productId -> {
+                if (!productData.existsById(productId))
+                    throw new ProductDoesNotExistInRepository(productId);
+            }
+        );
+
         customerData.addProductsToFavorites(id, request.getProductsToAdd());
         customerData.removeProductsFromFavorites(id, request.getProductsToRemove());
-        return customerData.findById(id).orElse(null);
+        return presenter.success(this.find(id));
     }
-    
 }

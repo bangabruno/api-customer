@@ -22,21 +22,23 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> 
     // Native Queries
     @Modifying
     @Transactional
-    @Query(nativeQuery = true, value = "UPDATE customers SET active = :active WHERE id = :id ")
+    @Query(nativeQuery = true, value = "UPDATE customers SET active = :active WHERE id = :id and active = true")
     int updateActive(@Param("active") boolean active, @Param("id") long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query(
         nativeQuery = true, 
-        value = "UPDATE customers SET name = :#{#c.name}, email = :#{#c.email} WHERE id = :id ")
+        value = "UPDATE customers SET name = :#{#c.name}, email = :#{#c.email} " +
+        " WHERE id = :#{#c.id} AND active = true ")
     int updateCustomer(@Param("c") CustomerEntity c);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query(
         nativeQuery = true,
-        value = "UPDATE customers SET favorite_products = array_append(favorite_products, CAST(:productId AS text)) WHERE id = :id "
+        value = "UPDATE customers SET favorite_products = array_append(favorite_products, CAST(:productId AS text)) " +
+        " WHERE id = :id and active = true"
     )
     void addProductsToFavorites(@Param("id") long id, @Param("productId") String productId);
 

@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.luizalabs.api.customer.config.ProductProperties;
+import com.luizalabs.api.customer.config.properties.ProductProperties;
 import com.luizalabs.api.customer.domain.model.product.ProductResponseModel;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class ProductAPI implements ProductDataGateway {
 
-    private RestTemplate restTemplate;
+    private RestTemplate restTemplate = new RestTemplate();
     private ProductProperties properties;
 
     @Autowired
-    public ProductAPI(RestTemplate restTemplate, ProductProperties properties) {
-        this.restTemplate = restTemplate;
+    public ProductAPI(ProductProperties properties) {
         this.properties = properties;
     }
 
@@ -46,6 +45,11 @@ public class ProductAPI implements ProductDataGateway {
     @Override
     public Set<ProductResponseModel> findByIds(Set<String> ids) {
         return ids.stream().map(this::findById).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean existsById(String id) {
+        return this.findById(id) != null;
     }
     
 }

@@ -65,13 +65,11 @@ public class CustomerJPA implements CustomerDataGateway {
     }
 
     @Override
+    @Transactional
     public Optional<CustomerResponseModel> updateCustomer(CustomerRequestEntity request) {
         CustomerEntity entity = this.mapRequestToEntity(request);
-        int updated = repository.updateCustomer(entity);
-
-        return Optional.ofNullable(
-            updated > 0 ? this.mapEntityToResponse(entity) : null
-        );
+        repository.updateCustomer(entity);
+        return this.findById(request.getId());
     }
 
     @Override

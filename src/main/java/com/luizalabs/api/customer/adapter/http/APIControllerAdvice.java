@@ -12,8 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.MethodNotAllowedException;
 
+@ControllerAdvice
 public class APIControllerAdvice {
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class) 
@@ -31,6 +34,11 @@ public class APIControllerAdvice {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(GenericResponse.fail(Sets.newHashSet(ex.getMessage())));
     }
 
+    @ExceptionHandler(MethodNotAllowedException.class)
+    public ResponseEntity<GenericResponse<?>> handle(MethodNotAllowedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(GenericResponse.fail(Sets.newHashSet(ex.getMessage())));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class) 
     public ResponseEntity<GenericResponse<?>> handle(MethodArgumentNotValidException ex) {
         return ResponseEntity
@@ -42,5 +50,12 @@ public class APIControllerAdvice {
                         .collect(Collectors.toSet())
                 )
             );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<GenericResponse<?>> handle(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+            GenericResponse.fail(Sets.newHashSet(ex.getMessage()))
+        );
     }
 }

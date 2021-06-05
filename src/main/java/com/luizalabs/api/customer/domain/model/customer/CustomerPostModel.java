@@ -17,7 +17,7 @@ public class CustomerPostModel {
     @NotBlank(message = "Nome do cliente deve ser informado!")
     String name;
 
-    @Email
-    @NotBlank(message = "Email do cliente deve ser informado com um email válido!")
+    @Email(message = "Email do cliente deve possuir um valor válido!")
+    @NotBlank(message = "Email do cliente deve ser informado")
     String email;
 }

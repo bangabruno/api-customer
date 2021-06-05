@@ -2,6 +2,9 @@ package com.luizalabs.api.customer.domain.shared;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import org.apache.commons.compress.utils.Sets;
 
 import lombok.Builder;
@@ -9,6 +12,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@JsonInclude(value = Include.NON_NULL)
 public class GenericResponse<D> {
     
     private D data;

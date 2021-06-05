@@ -2,6 +2,7 @@ package com.luizalabs.api.customer.config.security;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
@@ -10,15 +11,18 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeRequests()
-            .antMatchers("/postgresql-console/**")
-            .permitAll()
-            .anyRequest()
-            .authenticated()
+            .anyRequest().authenticated()
             .and()
-            .formLogin();
+            .httpBasic()
+            .and()
+            .csrf().disable()
+            .formLogin().disable()
+            .logout().disable();
+    }
 
-        httpSecurity.csrf().ignoringAntMatchers("/postgresql-console/**");
-        httpSecurity.headers().frameOptions().sameOrigin();
+    @Override public void configure(WebSecurity web) throws Exception {
+        web.ignoring()
+            .antMatchers( "/v2/api-docs", "/swagger-resources/**", "/configuration/ui","/configuration/security", "/swagger-ui.html");
     }
     
 }

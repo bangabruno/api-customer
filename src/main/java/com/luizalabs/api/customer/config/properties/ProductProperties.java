@@ -1,4 +1,4 @@
-package com.luizalabs.api.customer.config;
+package com.luizalabs.api.customer.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

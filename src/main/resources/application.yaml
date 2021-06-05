@@ -1,9 +1,10 @@
 spring:
     jpa:
+        show-sql: true
         properties:
             hibernate:
-                showSql: true
-                formatSql: true
+                ddl-auto: none
+                format-sql: true
 
 product:
     url-find-by-id: http://challenge-api.luizalabs.com/api/product/{id}/
